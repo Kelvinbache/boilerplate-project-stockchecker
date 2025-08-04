@@ -28,6 +28,7 @@ module.exports = function (app) {
       } else {
         res.json({ stockData });
       }
+      
     });
     
 };
