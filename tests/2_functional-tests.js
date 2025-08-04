@@ -6,77 +6,86 @@ const server = require('../server');
 
 chai.use(chaiHttp);
 
-suite('Functional Tests', function() {
-  test('GET /api/stock-prices => stock data object', function(done) {
-    chai.request(server)
-      .get('/api/stock-prices?stock=GOOGL')
-      .end(function(err, res) {
-        expect(res).to.have.status(200);
-        expect(res.body).to.be.an('object');
-        
-        // get the stock data
-        expect(res.body.stockData).to.have.property("stock").that.is.a('string');
-        done();
-});
- 
-test('GET /api/stock-prices => stock data with likes', function(done) {
-    chai.request(server)
-      .get('/api/stock-prices?stock=GOOGL&like=true')
-      .end(function(err, res) {
-        expect(res).to.have.status(200);
-
-        // likes the stock
-        expect(res.body.stockData).to.have.property("likes").to.equal(1);
-      done();
-      });
-    });
-
-test('GET /api/stock-prices => stock data with likes and multiple stocks', function(done) {
-        chai.request(server)
-        .get('/api/stock-prices?stock=GOOGL&like=true')
-        .end(function(err, res) {
-          expect(res).to.have.status(200);
-
-        // view the stock and likes
-        expect(res.body.stockData).to.have.property("stock").that.is.a('string');
-        expect(res.body.stockData).to.have.property("likes").to.equal(2);
-
-        done();
+suite('Functional Tests', function () {
+  suite("5 functional get request tests", function () {
+    test("Viewing one stock: GET request to /api/stock-prices", function (done) {
+      chai
+        .request(server)
+        .get("/api/stock-prices/")
+        .set("content-type", "application/json")
+        .query({ stock: "GOOG" })
+        .end(function (err, res) {
+          assert.equal(res.status, 200);
+          assert.equal(res.body.stockData.stock, "GOOG");
+          assert.exists(res.body.stockData.price, "GOOG has a price");
+          done();
         });
-      });
-
-
-      
-test('GET /api/stock-prices => stock data with likes and multiple stocks', function(done) {
-        chai.request(server)
-        .get('/api/stock-prices?stock=GOOGL&like=true')
-        .end(function(err, res) {
-          expect(res).to.have.status(200);
-        //  two stocks
-        expect(res.body).to.have.property("stockData").that.is.an('array').with.lengthOf(2);
-        done();
-
+    }).timeout(5000);
+    
+    test("Viewing one stock and liking it: GET request to /api/stock-prices", function (done) {
+      chai
+        .request(server)
+        .get("/api/stock-prices/")
+        .set("content-type", "application/json")
+        .query({ stock: "GOLD", like: true })
+        .end(function (err, res) {
+          assert.equal(res.status, 200);
+          assert.equal(res.body.stockData.stock, "GOLD");
+          assert.equal(res.body.stockData.likes, 1);
+          assert.exists(res.body.stockData.price, "GOLD has a price");
+          done();
         });
-      });
+    }).timeout(5000);
 
-
-
-      
-test('GET /api/stock-prices => stock data with likes and multiple stocks', function(done) {
-        chai.request(server)
-        .get('/api/stock-prices?stock=GOOGL&like=true')
-        .end(function(err, res) {
-          expect(res).to.have.status(200);
-
-        
-        // two stocks with likes
-        res.body.stockData.forEach(stock => {
-          expect(stock).to.have.property("stock").that.is.a('string');
-          expect(stock).to.have.property("rel_likes").to.equal(2);
+    test("Viewing the same stock and liking it again: GET request to /api/stock-prices", function (done) {
+      chai
+        .request(server)
+        .get("/api/stock-prices/")
+        .set("content-type", "application/json")
+        .query({ stock: "GOLD", like: true })
+        .end(function (err, res) {
+          assert.equal(res.status, 200);
+          assert.equal(res.body.stockData.stock, "GOLD");
+          assert.equal(res.body.stockData.likes, 1);
+          assert.exists(res.body.stockData.price, "GOLD has a price");
+          done();
         });
 
-         done();
+    }).timeout(5000);
+    
+    test("Viewing two stocks: GET request to /api/stock-prices", function (done) {
+      chai
+        .request(server)
+        .get("/api/stock-prices/")
+        .set("content-type", "application/json")
+        .query({ stock: ["AMZN", "T"] })
+        .end(function (err, res) {
+          assert.equal(res.status, 200);
+          assert.equal(res.body.stockData[0].stock, "AMZN");
+          assert.equal(res.body.stockData[1].stock, "T");
+          assert.exists(res.body.stockData[0].price, "AMZN has a price");
+          assert.exists(res.body.stockData[1].price, "T has a price");
+          done();
         });
-      });
-  });
+    }).timeout(5000);
+    
+    test("Viewing two stocks and liking them: GET request to /api/stock-prices", function (done) {
+      chai
+        .request(server)
+        .get("/api/stock-prices/")
+        .set("content-type", "application/json")
+        .query({ stock: ["AMZN", "T"], like: true })
+        .end(function (err, res) {
+          assert.equal(res.status, 200);
+          assert.equal(res.body.stockData[0].stock, "AMZN");
+          assert.equal(res.body.stockData[1].stock, "T");
+          assert.exists(res.body.stockData[0].price, "AMZN has a price");
+          assert.exists(res.body.stockData[1].price, "T has a price");
+          assert.exists(res.body.stockData[0].rel_likes, "AMZN has rel_likes");
+          assert.exists(res.body.stockData[1].rel_likes, "T has has rel_likes");
+          done();
+        });
+    }).timeout(5000);
+  })
+
 });  
